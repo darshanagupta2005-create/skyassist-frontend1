@@ -114,7 +114,7 @@ function LoginPage() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="mx-auto w-full max-w-md"
         >
-          <div className="rounded-3xl p-7 glass-panel float-soft">
+          <div className="rounded-3xl p-7 glass-panel">
             <div className="flex items-center gap-3">
               <span className="grid size-11 place-items-center rounded-2xl gradient-sky text-primary-foreground">
                 <Plane className="size-5" />
