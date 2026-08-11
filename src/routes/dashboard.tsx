@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "motion/react";
+import { ScanLine } from "lucide-react";
 import { AIChat } from "@/components/AIChat";
 import { AmenitySearch } from "@/components/AmenitySearch";
 import { MapView } from "@/components/MapView";
@@ -8,6 +9,8 @@ import { Navbar } from "@/components/Navbar";
 import { PanicModal } from "@/components/PanicModal";
 import { ProgressTimeline } from "@/components/ProgressTimeline";
 import { StatusCard } from "@/components/StatusCard";
+import { TicketScannerModal } from "@/components/TicketScannerModal";
+import { Button } from "@/components/ui/button";
 import { useUser } from "@/context/UserContext";
 
 export const Route = createFileRoute("/dashboard")({
@@ -32,7 +35,8 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardPage() {
-  const { user, flight } = useUser();
+  const { user, flight, t } = useUser();
+  const [scannerOpen, setScannerOpen] = useState(false);
   const navigate = useNavigate();
 
   // Guard: send unauthenticated passengers back to the login screen.
@@ -51,15 +55,25 @@ function DashboardPage() {
         transition={{ duration: 0.35 }}
         className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6 lg:py-8"
       >
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Good day{user ? `, ${user.name.split(" ")[0]}` : ""}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {flight
-              ? `${flight.flightNumber} to ${flight.to} · Gate ${flight.gate} · Terminal ${flight.terminal}`
-              : "Loading your flight…"}
-          </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {t("good_day")}
+              {user ? `, ${user.name.split(" ")[0]}` : ""}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {flight
+                ? `${flight.flightNumber} · ${flight.to} · ${t("gate")} ${flight.gate} · ${t("terminal")} ${flight.terminal}`
+                : t("loading_flight")}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setScannerOpen(true)}
+            className="h-11 rounded-xl"
+          >
+            <ScanLine className="size-4.5" /> {t("scan_ticket")}
+          </Button>
         </div>
 
         <div className="grid gap-5 lg:grid-cols-3">
@@ -72,7 +86,7 @@ function DashboardPage() {
           <div className="space-y-5">
             <ProgressTimeline />
             <section className="rounded-3xl p-6 card-elevated">
-              <h2 className="text-sm font-semibold tracking-tight">Terminal conditions</h2>
+              <h2 className="text-sm font-semibold tracking-tight">{t("terminal_conditions")}</h2>
               <ul className="mt-4 space-y-3 text-sm">
                 {[
                   ["Central security", "9 min wait", "text-warning"],
@@ -92,6 +106,7 @@ function DashboardPage() {
       </motion.main>
 
       <PanicModal />
+      <TicketScannerModal open={scannerOpen} onOpenChange={setScannerOpen} />
     </div>
   );
 }
