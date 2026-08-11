@@ -83,3 +83,17 @@ export interface AppNotification {
   body: string;
   time: string;
 }
+
+export interface BoardingPass {
+  passengerName: string | null;
+  flightNumber: string | null;
+  gate: string | null;
+  terminal: string | null;
+  origin: string | null;
+  destination: string | null;
+  seat: string | null;
+  bookingRef: string | null;
+  departureTime: string | null; // ISO or null
+  boardingTime: string | null; // ISO or null
+  rawPayload: string;
+}

@@ -3,18 +3,19 @@ import { motion } from "motion/react";
 import { Clock, DoorOpen, LandPlot, Luggage, Plane, Timer } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { FlightInfo } from "@/lib/types";
+import { useUser } from "@/context/UserContext";
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-function useCountdown(target?: string) {
+function useCountdown(target: string | undefined, boardingNow: string) {
   const [left, setLeft] = useState("--:--");
   useEffect(() => {
     if (!target) return;
     const tick = () => {
       const diff = new Date(target).getTime() - Date.now();
-      if (diff <= 0) return setLeft("Boarding now");
+      if (diff <= 0) return setLeft(boardingNow);
       const h = Math.floor(diff / 3_600_000);
       const m = Math.floor((diff % 3_600_000) / 60_000);
       const s = Math.floor((diff % 60_000) / 1000);
@@ -23,7 +24,7 @@ function useCountdown(target?: string) {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [target]);
+  }, [target, boardingNow]);
   return left;
 }
 
@@ -48,7 +49,8 @@ function Metric({
 }
 
 export function StatusCard({ flight }: { flight: FlightInfo | null }) {
-  const countdown = useCountdown(flight?.boardingTime);
+  const { t } = useUser();
+  const countdown = useCountdown(flight?.boardingTime, t("boarding_now"));
 
   if (!flight) {
     return (
@@ -68,7 +70,7 @@ export function StatusCard({ flight }: { flight: FlightInfo | null }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
       className="relative overflow-hidden rounded-3xl gradient-night p-6 shadow-[var(--shadow-float)]"
-      aria-label="Flight information"
+      aria-label={t("flight_information")}
     >
       <div className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full bg-primary/30 blur-3xl" />
       <div className="relative flex items-start justify-between gap-4">
@@ -89,7 +91,7 @@ export function StatusCard({ flight }: { flight: FlightInfo | null }) {
             onTime ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
           }`}
         >
-          {onTime ? "On Time" : `Delayed ${flight.delayMinutes}m`}
+          {onTime ? t("on_time") : `${t("delayed")} ${flight.delayMinutes}m`}
         </span>
       </div>
 
@@ -116,15 +118,15 @@ export function StatusCard({ flight }: { flight: FlightInfo | null }) {
       </div>
 
       <div className="relative mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Metric icon={DoorOpen} label="Gate" value={flight.gate} />
-        <Metric icon={LandPlot} label="Terminal" value={flight.terminal} />
-        <Metric icon={Luggage} label="Boarding" value={fmt(flight.boardingTime)} />
-        <Metric icon={Clock} label="Departs" value={fmt(flight.departureTime)} />
+        <Metric icon={DoorOpen} label={t("gate")} value={flight.gate} />
+        <Metric icon={LandPlot} label={t("terminal")} value={flight.terminal} />
+        <Metric icon={Luggage} label={t("boarding")} value={fmt(flight.boardingTime)} />
+        <Metric icon={Clock} label={t("departs")} value={fmt(flight.departureTime)} />
       </div>
 
       <div className="relative mt-3 flex items-center justify-between rounded-2xl bg-primary-foreground/10 px-4 py-3">
         <p className="flex items-center gap-2 text-xs uppercase tracking-wide text-primary-foreground/70">
-          <Timer className="size-3.5" /> Boarding starts in
+          <Timer className="size-3.5" /> {t("boarding_starts_in")}
         </p>
         <p className="font-mono text-lg font-semibold text-primary-foreground">{countdown}</p>
       </div>

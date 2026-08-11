@@ -4,14 +4,15 @@ import { Bot, Footprints, Mic, Route, SendHorizonal, Sparkle } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useUser } from "@/context/UserContext";
+import type { TranslationKey } from "@/lib/i18n";
 import { toast } from "sonner";
 
-const SUGGESTIONS = [
-  "Find nearest coffee",
-  "Where is Gate A12?",
-  "How long to security?",
-  "Find wheelchair assistance",
-  "Lost baggage",
+const SUGGESTIONS: { key: TranslationKey; query: string }[] = [
+  { key: "find_nearest_coffee", query: "Find nearest coffee" },
+  { key: "where_is_my_gate", query: "Where is Gate A12?" },
+  { key: "how_long_to_security", query: "How long to security?" },
+  { key: "find_wheelchair", query: "Find wheelchair assistance" },
+  { key: "lost_baggage", query: "Lost baggage" },
 ];
 
 function TypingDots() {
@@ -30,7 +31,7 @@ function TypingDots() {
 }
 
 export function AIChat() {
-  const { messages, isThinking, ask } = useUser();
+  const { messages, isThinking, ask, t } = useUser();
   const [input, setInput] = useState("");
   const [listening, setListening] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -62,8 +63,8 @@ export function AIChat() {
           <Bot className="size-4.5" />
         </span>
         <div>
-          <h2 className="text-sm font-semibold tracking-tight">Airport Assistant</h2>
-          <p className="text-xs text-muted-foreground">Powered by real-time terminal data</p>
+          <h2 className="text-sm font-semibold tracking-tight">{t("airport_assistant")}</h2>
+          <p className="text-xs text-muted-foreground">{t("assistant_subtitle")}</p>
         </div>
       </header>
 
@@ -78,9 +79,9 @@ export function AIChat() {
               <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary float-soft">
                 <Sparkle className="size-6" />
               </span>
-              <p className="mt-4 text-sm font-semibold">Ask me anything about the airport</p>
+              <p className="mt-4 text-sm font-semibold">{t("ask_me_anything")}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Directions, wait times, amenities and assistance — in your language.
+                {t("ask_hint")}
               </p>
             </div>
           </motion.div>
@@ -109,7 +110,7 @@ export function AIChat() {
                 {m.steps && (
                   <div className="mt-2 rounded-2xl border border-border bg-card p-3 text-left">
                     <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      <Route className="size-3.5" /> Step-by-step
+                      <Route className="size-3.5" /> {t("step_by_step")}
                     </p>
                     <ol className="mt-2 space-y-1.5">
                       {m.steps.map((s, i) => (
@@ -150,13 +151,13 @@ export function AIChat() {
         <div className="mb-3 flex flex-wrap gap-1.5">
           {SUGGESTIONS.map((s) => (
             <button
-              key={s}
+              key={s.key}
               type="button"
-              onClick={() => void ask(s)}
+              onClick={() => void ask(s.query)}
               disabled={isThinking}
               className="rounded-full border border-border px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary disabled:opacity-50"
             >
-              {s}
+              {t(s.key)}
             </button>
           ))}
         </div>
@@ -165,8 +166,8 @@ export function AIChat() {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask me anything about the airport..."
-            aria-label="Ask the airport assistant"
+            placeholder={t("ask_placeholder")}
+            aria-label={t("ask_me_anything")}
             className="h-11 rounded-full"
           />
           <Button
@@ -174,7 +175,7 @@ export function AIChat() {
             size="icon"
             variant={listening ? "default" : "outline"}
             onClick={startVoice}
-            aria-label="Voice search"
+            aria-label={t("voice_search")}
             className={`size-11 shrink-0 rounded-full ${listening ? "pulse-ring" : ""}`}
           >
             <Mic className="size-4.5" />
@@ -183,7 +184,7 @@ export function AIChat() {
             type="submit"
             size="icon"
             disabled={isThinking || !input.trim()}
-            aria-label="Send message"
+            aria-label={t("send_message")}
             className="size-11 shrink-0 rounded-full"
           >
             <SendHorizonal className="size-4.5" />
