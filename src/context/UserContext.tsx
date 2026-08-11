@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { toast } from "sonner";
 import type {
   AppNotification,
+  BoardingPass,
   AskResponse,
   ChatMessage,
   FlightInfo,
@@ -11,6 +12,7 @@ import type {
   UserProfile,
 } from "@/lib/types";
 import { AMENITY_MARKERS, DEFAULT_ROUTE } from "@/lib/mock-data";
+import { createTranslator, type Translator } from "@/lib/i18n";
 import { assistantApi, authApi, flightApi, panicApi } from "@/services/api";
 
 export const JOURNEY_STEPS = [
@@ -26,6 +28,7 @@ interface UserContextValue {
   flight: FlightInfo | null;
   language: string;
   setLanguage: (code: string) => void;
+  t: Translator;
   theme: "light" | "dark";
   toggleTheme: () => void;
   messages: ChatMessage[];
@@ -43,17 +46,19 @@ interface UserContextValue {
   logout: () => void;
   ask: (question: string) => Promise<void>;
   reportEmergency: (type: string) => Promise<void>;
+  applyBoardingPass: (pass: BoardingPass) => void;
   loadingAuth: boolean;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
 
 const STORAGE_KEY = "aero.profile";
+const LANG_KEY = "aero.language";
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [flight, setFlight] = useState<FlightInfo | null>(null);
-  const [language, setLanguage] = useState("English");
+  const [language, setLanguageState] = useState("English");
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
@@ -78,6 +83,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
     },
   ]);
 
+  const setLanguage = useCallback((next: string) => {
+    setLanguageState(next);
+    if (typeof window !== "undefined") window.localStorage.setItem(LANG_KEY, next);
+  }, []);
+
+  const t = useMemo(() => createTranslator(language), [language]);
+
+  // Restore the language preference so switching survives a refresh.
+  useEffect(() => {
+    const stored = window.localStorage.getItem(LANG_KEY);
+    if (stored) setLanguageState(stored);
+  }, []);
+
   // Restore the session so a refresh keeps the passenger signed in.
   useEffect(() => {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -85,7 +103,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       const profile = JSON.parse(raw) as UserProfile;
       setUser(profile);
-      setLanguage(profile.language);
+      if (!window.localStorage.getItem(LANG_KEY)) setLanguageState(profile.language);
       void flightApi.get(profile.flightNumber).then(setFlight);
     } catch {
       window.localStorage.removeItem(STORAGE_KEY);
@@ -187,12 +205,36 @@ export function UserProvider({ children }: { children: ReactNode }) {
     [user],
   );
 
+  /** Merge scanned boarding-pass data into the existing flight state. */
+  const applyBoardingPass = useCallback((pass: BoardingPass) => {
+    setFlight((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        flightNumber: pass.flightNumber ?? prev.flightNumber,
+        gate: pass.gate ?? prev.gate,
+        terminal: pass.terminal ?? prev.terminal,
+        to: pass.destination ?? prev.to,
+        from: pass.origin ?? prev.from,
+        departureTime: pass.departureTime ?? prev.departureTime,
+        boardingTime: pass.boardingTime ?? prev.boardingTime,
+      };
+    });
+    if (pass.passengerName) {
+      setUser((prev) => (prev ? { ...prev, name: pass.passengerName as string } : prev));
+    }
+    toast.success(createTranslator(language)("scanned_title"), {
+      description: createTranslator(language)("flight_updated"),
+    });
+  }, [language]);
+
   const value = useMemo<UserContextValue>(
     () => ({
       user,
       flight,
       language,
       setLanguage,
+      t,
       theme,
       toggleTheme: () => setTheme((t) => (t === "light" ? "dark" : "light")),
       messages,
@@ -211,6 +253,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       logout,
       ask,
       reportEmergency,
+      applyBoardingPass,
       loadingAuth,
     }),
     [
@@ -230,6 +273,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       logout,
       ask,
       reportEmergency,
+      applyBoardingPass,
+      setLanguage,
+      t,
       loadingAuth,
     ],
   );
