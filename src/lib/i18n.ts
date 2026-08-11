@@ -285,7 +285,8 @@ const mr: Table = {
   route_for: "याचा मार्ग",
   emergency: "आणीबाणी",
   emergency_assistance: "आणीबाणी मदत",
-  emergency_desc: "तुम्हाला काय हवे ते निवडा. कर्मचाऱ्यांना तुमचा गेट, टर्मिनल आणि उड्डाण लगेच कळेल.",
+  emergency_desc:
+    "तुम्हाला काय हवे ते निवडा. कर्मचाऱ्यांना तुमचा गेट, टर्मिनल आणि उड्डाण लगेच कळेल.",
   alerting_staff: "कर्मचाऱ्यांना कळवत आहोत…",
   help: "मदत",
   continue: "पुढे चला",
@@ -402,8 +403,7 @@ const es: Table = {
   start_camera: "Activar cámara",
   stop_camera: "Detener cámara",
   position_pass: "Coloca tu tarjeta de embarque dentro del marco",
-  camera_permission_hint:
-    "Solo usamos la cámara para leer el código de barras. No se sube nada.",
+  camera_permission_hint: "Solo usamos la cámara para leer el código de barras. No se sube nada.",
   camera_denied: "Permiso de cámara denegado. Actívalo en los ajustes del navegador.",
   camera_unavailable: "No se encontró ninguna cámara en este dispositivo.",
   drop_here: "Suelta aquí tu tarjeta de embarque",

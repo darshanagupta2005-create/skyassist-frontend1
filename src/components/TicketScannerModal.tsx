@@ -198,11 +198,15 @@ export function TicketScannerModal({ open, onOpenChange }: Props) {
                       {t(key)}
                     </dt>
                     <dd className="mt-0.5 font-medium">
-                      {value
-                        ? key === "departure" || key === "boarding"
-                          ? new Date(value).toLocaleString()
-                          : value
-                        : <span className="text-muted-foreground">{t("unknown")}</span>}
+                      {value ? (
+                        key === "departure" || key === "boarding" ? (
+                          new Date(value).toLocaleString()
+                        ) : (
+                          value
+                        )
+                      ) : (
+                        <span className="text-muted-foreground">{t("unknown")}</span>
+                      )}
                     </dd>
                   </div>
                 ))}
@@ -279,7 +283,11 @@ export function TicketScannerModal({ open, onOpenChange }: Props) {
                     onClick={() => (cameraOn ? stopCamera() : void startCamera())}
                     disabled={busy}
                   >
-                    {busy ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+                    {busy ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Camera className="size-4" />
+                    )}
                     {cameraOn ? t("stop_camera") : t("start_camera")}
                   </Button>
                 </TabsContent>
@@ -300,17 +308,25 @@ export function TicketScannerModal({ open, onOpenChange }: Props) {
                       if (file) void handleFile(file);
                     }}
                     className={`flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed p-10 transition-colors ${
-                      dragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                      dragging
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
                     }`}
                   >
                     <span className="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary">
-                      {busy ? <Loader2 className="size-5 animate-spin" /> : <FileUp className="size-5" />}
+                      {busy ? (
+                        <Loader2 className="size-5 animate-spin" />
+                      ) : (
+                        <FileUp className="size-5" />
+                      )}
                     </span>
                     <span className="text-sm font-medium">
                       {busy ? t("reading_file") : t("drop_here")}
                     </span>
                     <span className="text-xs text-muted-foreground">{t("or_click_browse")}</span>
-                    <span className="text-[11px] text-muted-foreground">{t("accepted_formats")}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {t("accepted_formats")}
+                    </span>
                   </button>
                   <input
                     ref={fileRef}

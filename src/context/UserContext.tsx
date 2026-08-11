@@ -15,13 +15,7 @@ import { AMENITY_MARKERS, DEFAULT_ROUTE } from "@/lib/mock-data";
 import { createTranslator, type Translator } from "@/lib/i18n";
 import { assistantApi, authApi, flightApi, panicApi } from "@/services/api";
 
-export const JOURNEY_STEPS = [
-  "Check-In",
-  "Security",
-  "Immigration",
-  "Gate",
-  "Boarding",
-] as const;
+export const JOURNEY_STEPS = ["Check-In", "Security", "Immigration", "Gate", "Boarding"] as const;
 
 interface UserContextValue {
   user: UserProfile | null;
@@ -206,27 +200,30 @@ export function UserProvider({ children }: { children: ReactNode }) {
   );
 
   /** Merge scanned boarding-pass data into the existing flight state. */
-  const applyBoardingPass = useCallback((pass: BoardingPass) => {
-    setFlight((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        flightNumber: pass.flightNumber ?? prev.flightNumber,
-        gate: pass.gate ?? prev.gate,
-        terminal: pass.terminal ?? prev.terminal,
-        to: pass.destination ?? prev.to,
-        from: pass.origin ?? prev.from,
-        departureTime: pass.departureTime ?? prev.departureTime,
-        boardingTime: pass.boardingTime ?? prev.boardingTime,
-      };
-    });
-    if (pass.passengerName) {
-      setUser((prev) => (prev ? { ...prev, name: pass.passengerName as string } : prev));
-    }
-    toast.success(createTranslator(language)("scanned_title"), {
-      description: createTranslator(language)("flight_updated"),
-    });
-  }, [language]);
+  const applyBoardingPass = useCallback(
+    (pass: BoardingPass) => {
+      setFlight((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          flightNumber: pass.flightNumber ?? prev.flightNumber,
+          gate: pass.gate ?? prev.gate,
+          terminal: pass.terminal ?? prev.terminal,
+          to: pass.destination ?? prev.to,
+          from: pass.origin ?? prev.from,
+          departureTime: pass.departureTime ?? prev.departureTime,
+          boardingTime: pass.boardingTime ?? prev.boardingTime,
+        };
+      });
+      if (pass.passengerName) {
+        setUser((prev) => (prev ? { ...prev, name: pass.passengerName as string } : prev));
+      }
+      toast.success(createTranslator(language)("scanned_title"), {
+        description: createTranslator(language)("flight_updated"),
+      });
+    },
+    [language],
+  );
 
   const value = useMemo<UserContextValue>(
     () => ({
@@ -243,8 +240,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       route,
       activeRouteLabel,
       journeyIndex,
-      advanceJourney: () =>
-        setJourneyIndex((i) => Math.min(i + 1, JOURNEY_STEPS.length - 1)),
+      advanceJourney: () => setJourneyIndex((i) => Math.min(i + 1, JOURNEY_STEPS.length - 1)),
       notifications,
       clearNotifications: () => setNotifications([]),
       emergencyOpen,
