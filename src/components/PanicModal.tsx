@@ -29,7 +29,7 @@ const OPTIONS = [
 
 /** Floating SOS button plus the emergency options modal. */
 export function PanicModal() {
-  const { emergencyOpen, setEmergencyOpen, reportEmergency } = useUser();
+  const { emergencyOpen, setEmergencyOpen, reportEmergency, t } = useUser();
   const [pending, setPending] = useState<string | null>(null);
 
   const handle = async (label: string) => {
@@ -46,7 +46,7 @@ export function PanicModal() {
       <motion.button
         type="button"
         onClick={() => setEmergencyOpen(true)}
-        aria-label="Emergency assistance"
+        aria-label={t("emergency_assistance")}
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.4, type: "spring", stiffness: 240, damping: 18 }}
@@ -61,10 +61,10 @@ export function PanicModal() {
         <DialogContent className="rounded-3xl sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
-              <ShieldAlert className="size-5" /> Emergency assistance
+              <ShieldAlert className="size-5" /> {t("emergency_assistance")}
             </DialogTitle>
             <DialogDescription>
-              Choose what you need. Airport staff receive your gate, terminal and flight instantly.
+              {t("emergency_desc")}
             </DialogDescription>
           </DialogHeader>
 
@@ -95,7 +95,7 @@ export function PanicModal() {
                 <span>
                   <span className="block text-sm font-medium">{label}</span>
                   <span className="block text-xs text-muted-foreground">
-                    {pending === label ? "Alerting staff…" : hint}
+                    {pending === label ? t("alerting_staff") : hint}
                   </span>
                 </span>
               </motion.button>

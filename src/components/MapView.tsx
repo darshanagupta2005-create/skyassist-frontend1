@@ -31,16 +31,16 @@ const ICONS: Record<MarkerKind, typeof Coffee> = {
  * Swap the inner surface for <GoogleMap /> once the Maps key is wired up.
  */
 export function MapView() {
-  const { markers, route, activeRouteLabel } = useUser();
+  const { markers, route, activeRouteLabel, t } = useUser();
   const path = route.map((p) => `${p.x},${p.y}`).join(" ");
 
   return (
-    <section className="overflow-hidden rounded-3xl card-elevated" aria-label="Airport map">
+    <section className="overflow-hidden rounded-3xl card-elevated" aria-label={t("airport_map")}>
       <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div>
           <h2 className="text-sm font-semibold tracking-tight">Terminal 3 · Concourse A</h2>
           <p className="text-xs text-muted-foreground">
-            {activeRouteLabel ? `Route for “${activeRouteLabel}”` : "Live indoor positioning"}
+            {activeRouteLabel ? `${t("route_for")} “${activeRouteLabel}”` : t("live_positioning")}
           </p>
         </div>
         <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">

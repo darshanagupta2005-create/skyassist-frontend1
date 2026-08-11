@@ -29,7 +29,7 @@ function initials(name: string) {
 }
 
 export function Navbar() {
-  const { user, language, setLanguage, theme, toggleTheme, notifications, clearNotifications, logout } =
+  const { user, language, setLanguage, theme, toggleTheme, notifications, clearNotifications, logout, t } =
     useUser();
 
   return (
@@ -52,7 +52,7 @@ export function Navbar() {
               animate={{ opacity: [1, 0.3, 1] }}
               transition={{ duration: 1.8, repeat: Infinity }}
             />
-            Live
+            {t("live")}
           </span>
 
           <div className="hidden sm:block">
@@ -61,7 +61,7 @@ export function Navbar() {
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative rounded-full" aria-label="Notifications">
+              <Button variant="ghost" size="icon" className="relative rounded-full" aria-label={t("notifications")}>
                 <Bell className="size-4.5" />
                 {notifications.length > 0 && (
                   <span className="absolute right-1 top-1 grid size-4 place-items-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground">
@@ -72,15 +72,15 @@ export function Navbar() {
             </PopoverTrigger>
             <PopoverContent align="end" className="w-80 rounded-2xl p-0">
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                <p className="text-sm font-semibold">Notifications</p>
+                <p className="text-sm font-semibold">{t("notifications")}</p>
                 <Button variant="ghost" size="sm" onClick={clearNotifications}>
-                  Clear
+                  {t("clear")}
                 </Button>
               </div>
               <div className="max-h-72 overflow-y-auto scrollbar-slim">
                 {notifications.length === 0 ? (
                   <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    You're all caught up.
+                    {t("all_caught_up")}
                   </p>
                 ) : (
                   notifications.map((n) => (
@@ -95,7 +95,7 @@ export function Navbar() {
             </PopoverContent>
           </Popover>
 
-          <Button variant="ghost" size="icon" className="rounded-full" onClick={toggleTheme} aria-label="Toggle dark mode">
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={toggleTheme} aria-label={t("toggle_dark_mode")}>
             {theme === "dark" ? <Sun className="size-4.5" /> : <Moon className="size-4.5" />}
           </Button>
 
@@ -120,10 +120,10 @@ export function Navbar() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="capitalize">
-                Assistance: {user?.accessibility}
+                {t("assistance")}: {user?.accessibility}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
-                <LogOut className="size-4" /> Sign out
+                <LogOut className="size-4" /> {t("sign_out")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
