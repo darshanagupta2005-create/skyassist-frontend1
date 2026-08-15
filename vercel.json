@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://skyassist-backend-u2q1.onrender.com/api/:path*"
+    },
+    {
+      "source": "/ask",
+      "destination": "https://skyassist-backend-u2q1.onrender.com/ask"
+    }
+  ]
+}
