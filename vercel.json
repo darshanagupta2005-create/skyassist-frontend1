@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/ask",
+      "destination": "https://skyassist-backend-u2q1.onrender.com/api/ask"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://skyassist-backend-u2q1.onrender.com/api/:path*"
     },
