@@ -199,18 +199,52 @@ export function mockAsk(question: string): AskResponse {
       distance: "420 m",
     };
   }
-  // Default: coffee
+  if (pick(question, ["baggage", "bag", "lost", "luggage"])) {
+    return {
+      response:
+        "For lost baggage, please proceed to the Baggage Service Office on Level 1 near Arrival Belt 4.",
+      steps: [
+        "Follow signs towards Arrivals on Level 1",
+        "Proceed past the main customs exit",
+        "The Baggage Service Office is opposite Belt 4",
+      ],
+      markers: AMENITY_MARKERS.filter((m) => m.kind === "you"),
+      route: [
+        { x: 22, y: 68 },
+        { x: 35, y: 50 },
+        { x: 50, y: 30 },
+      ],
+      estimatedTime: "5 min",
+      distance: "250 m",
+    };
+  }
+  if (pick(question, ["coffee", "starbucks", "drink"])) {
+    return {
+      response:
+        "The nearest coffee shop is Starbucks in Concourse A. Walk straight for 120 metres, then turn left at the information desk. Estimated walking time is 3 minutes.",
+      steps: [
+        "Walk straight for 120 metres",
+        "Turn left at the information desk",
+        "Starbucks is on your right, opposite Gate A6",
+      ],
+      markers: AMENITY_MARKERS.filter((m) => ["you", "coffee"].includes(m.kind)),
+      route: DEFAULT_ROUTE,
+      estimatedTime: "3 min",
+      distance: "120 m",
+    };
+  }
+
+  // Dynamic default fallback for any other question typed by the user
   return {
-    response:
-      "The nearest coffee shop is Starbucks in Concourse A. Walk straight for 120 metres, then turn left at the information desk. Estimated walking time is 3 minutes.",
+    response: `I've received your query about "${question}". For detailed assistance, please visit the Information Counter at Concourse A.`,
     steps: [
-      "Walk straight for 120 metres",
-      "Turn left at the information desk",
-      "Starbucks is on your right, opposite Gate A6",
+      "Proceed to the central concourse area",
+      "Look for the main Information Desk beside Gate A8",
     ],
-    markers: AMENITY_MARKERS.filter((m) => ["you", "coffee"].includes(m.kind)),
+    markers: AMENITY_MARKERS.filter((m) => m.kind === "you"),
     route: DEFAULT_ROUTE,
     estimatedTime: "3 min",
-    distance: "120 m",
+    distance: "150 m",
   };
 }
+

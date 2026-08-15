@@ -1,3 +1,4 @@
+import { BrowserMultiFormatReader } from "@zxing/library";
 import type { BoardingPass } from "./types";
 
 /** Day-of-year → ISO date in the current (or next) year. */
@@ -87,4 +88,23 @@ export function parseGenericPayload(raw: string): BoardingPass | null {
     boardingTime: null,
     rawPayload: raw,
   };
+}
+
+/**
+ * Decodes barcode from an image File and parses the resulting string.
+ */
+export async function decodeBoardingPassImage(file: File): Promise<BoardingPass | null> {
+  try {
+    const codeReader = new BrowserMultiFormatReader();
+    const imageUrl = URL.createObjectURL(file);
+    const result = await codeReader.decodeFromImageUrl(imageUrl);
+    URL.revokeObjectURL(imageUrl);
+
+    if (result && result.getText()) {
+      return parseGenericPayload(result.getText());
+    }
+  } catch (err) {
+    console.warn("Barcode reading failed or image had no readable barcode.", err);
+  }
+  return null;
 }

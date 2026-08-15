@@ -7,12 +7,12 @@ import { useUser } from "@/context/UserContext";
 import type { TranslationKey } from "@/lib/i18n";
 import { toast } from "sonner";
 
-const SUGGESTIONS: { key: TranslationKey; query: string }[] = [
-  { key: "find_nearest_coffee", query: "Find nearest coffee" },
-  { key: "where_is_my_gate", query: "Where is Gate A12?" },
-  { key: "how_long_to_security", query: "How long to security?" },
-  { key: "find_wheelchair", query: "Find wheelchair assistance" },
-  { key: "lost_baggage", query: "Lost baggage" },
+const SUGGESTIONS: { key: TranslationKey }[] = [
+  { key: "find_nearest_coffee" },
+  { key: "where_is_my_gate" },
+  { key: "how_long_to_security" },
+  { key: "find_wheelchair" },
+  { key: "lost_baggage" },
 ];
 
 function TypingDots() {
@@ -52,7 +52,7 @@ export function AIChat() {
     toast("Listening…", { description: "Voice search is a demo in this preview." });
     setTimeout(() => {
       setListening(false);
-      setInput("Find nearest coffee");
+      setInput(t("find_nearest_coffee"));
     }, 1600);
   };
 
@@ -107,7 +107,7 @@ export function AIChat() {
                   {m.text}
                 </div>
 
-                {m.steps && (
+                {m.steps && m.steps.length > 0 && (
                   <div className="mt-2 rounded-2xl border border-border bg-card p-3 text-left">
                     <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                       <Route className="size-3.5" /> {t("step_by_step")}
@@ -122,14 +122,20 @@ export function AIChat() {
                         </li>
                       ))}
                     </ol>
-                    <div className="mt-3 flex gap-2 text-[11px]">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-1 font-medium text-success">
-                        <Footprints className="size-3" /> {m.estimatedTime}
-                      </span>
-                      <span className="rounded-full bg-muted px-2 py-1 font-medium text-muted-foreground">
-                        {m.distance}
-                      </span>
-                    </div>
+                    {(m.estimatedTime || m.distance) && (
+                      <div className="mt-3 flex gap-2 text-[11px]">
+                        {m.estimatedTime && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-1 font-medium text-success">
+                            <Footprints className="size-3" /> {m.estimatedTime}
+                          </span>
+                        )}
+                        {m.distance && (
+                          <span className="rounded-full bg-muted px-2 py-1 font-medium text-muted-foreground">
+                            {m.distance}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -153,7 +159,7 @@ export function AIChat() {
             <button
               key={s.key}
               type="button"
-              onClick={() => void ask(s.query)}
+              onClick={() => void ask(t(s.key))}
               disabled={isThinking}
               className="rounded-full border border-border px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary disabled:opacity-50"
             >
