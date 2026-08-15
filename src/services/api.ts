@@ -1,9 +1,3 @@
-/**
- * Single Axios API service for the Airport Assistant frontend.
- * Talks to the Spring Boot backend. When the backend is unreachable
- * (e.g. local design preview), the service falls back to realistic
- * airport mock data so the UI is always demonstrable.
- */
 import axios from "axios";
 import type {
   AskResponse,
@@ -16,9 +10,16 @@ import { mockAsk, mockFlight, mockProfile } from "@/lib/mock-data";
 
 const TOKEN_KEY = "aero.jwt";
 
+// Reads VITE_API_URL or VITE_API_BASE_URL, falling back directly to your Render backend
+const RENDER_BACKEND_URL = "https://skyassist-backend-u2q1.onrender.com";
+const BASE_URL =
+  import.meta.env["VITE_API_URL"] ||
+  import.meta.env["VITE_API_BASE_URL"] ||
+  RENDER_BACKEND_URL;
+
 export const api = axios.create({
-  baseURL: import.meta.env["VITE_API_BASE_URL"] ?? "/api",
-  timeout: 8000,
+  baseURL: BASE_URL,
+  timeout: 15000, // Increased to 15s to account for Render spin-up times
   headers: { "Content-Type": "application/json" },
 });
 
@@ -44,7 +45,8 @@ api.interceptors.request.use((config) => {
 async function withFallback<T>(run: () => Promise<T>, fallback: () => Promise<T> | T): Promise<T> {
   try {
     return await run();
-  } catch {
+  } catch (err) {
+    console.warn("Backend request failed, using fallback mock data:", err);
     return await fallback();
   }
 }
