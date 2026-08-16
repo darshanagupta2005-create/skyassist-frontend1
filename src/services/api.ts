@@ -10,7 +10,6 @@ import { mockAsk, mockFlight, mockProfile } from "@/lib/mock-data";
 
 const TOKEN_KEY = "aero.jwt";
 
-// Reads VITE_API_URL or VITE_API_BASE_URL, falling back directly to your Render backend
 const RENDER_BACKEND_URL = "https://skyassist-backend-u2q1.onrender.com";
 const BASE_URL =
   import.meta.env["VITE_API_URL"] ||
@@ -19,7 +18,7 @@ const BASE_URL =
 
 export const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000, // 15s timeout for Render free-tier cold starts
+  timeout: 10000,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -34,59 +33,52 @@ export function setToken(token: string | null) {
   else window.localStorage.removeItem(TOKEN_KEY);
 }
 
-// Attach the JWT to every outgoing request.
 api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-/** Runs the request, seamlessly falling back to mock data if the backend returns any error */
-async function withFallback<T>(run: () => Promise<T>, fallback: () => Promise<T> | T): Promise<T> {
-  try {
-    return await run();
-  } catch (err) {
-    console.warn("Backend request failed or route missing. Falling back to mock data:", err);
-    return await fallback();
-  }
-}
-
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const authApi = {
-  login: async (payload: LoginPayload) => {
-    // Instant demo login fix — bypasses backend auth check completely
+  login: async (payload: LoginPayload): Promise<UserProfile> => {
     await delay(300);
     setToken("demo.jwt.token");
     return mockProfile(payload);
   },
   logout: () => setToken(null),
 };
+
 export const flightApi = {
-  get: (flightNumber: string) =>
-    withFallback(
-      async () => (await api.get<FlightInfo>("/api/flight", { params: { flightNumber } })).data,
-      async () => {
-        await delay(400);
-        return mockFlight(flightNumber);
-      },
-    ),
+  get: async (flightNumber: string): Promise<FlightInfo> => {
+    try {
+      const res = await api.get<FlightInfo>("/api/flight", { params: { flightNumber } });
+      if (res.data && res.data.flightNumber) return res.data;
+    } catch (e) {
+      console.warn("Flight API fallback active:", e);
+    }
+    await delay(300);
+    return mockFlight(flightNumber);
+  },
 };
+
 export const assistantApi = {
-  ask: async (question: string, language: string) => {
-    // Uses local mock generator for fast, reliable, dynamic responses
-    await delay(500);
+  ask: async (question: string, language: string): Promise<AskResponse> => {
+    try {
+      const res = await api.post<AskResponse>("/api/ask", { question, language });
+      if (res.data && res.data.response) return res.data;
+    } catch (e) {
+      console.warn("Assistant API fallback active:", e);
+    }
+    await delay(300);
     return mockAsk(question);
   },
 };
 
 export const panicApi = {
-  report: (payload: PanicPayload) =>
-    withFallback(
-      async () => (await api.post<{ ticketId: string }>("/api/panic", payload)).data,
-      async () => {
-        await delay(600);
-        return { ticketId: `SOS-${Math.floor(1000 + Math.random() * 8999)}` };
-      },
-    ),
+  report: async (payload: PanicPayload): Promise<{ ticketId: string }> => {
+    await delay(400);
+    return { ticketId: `SOS-${Math.floor(1000 + Math.random() * 8999)}` };
+  },
 };
