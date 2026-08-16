@@ -5,26 +5,54 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { FlightInfo } from "@/lib/types";
 import { useUser } from "@/context/UserContext";
 
-function fmt(iso: string) {
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+// Safely parses ISO dates OR raw time strings like "19:35" / "19:35:00"
+function parseSafeDate(dateStr?: string): Date | null {
+  if (!dateStr) return null;
+
+  // Handles raw time strings like "19:35" or "19:35:00"
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(dateStr)) {
+    const [h, m] = dateStr.split(":").map(Number);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d;
+  }
+
+  // Handles standard ISO date strings
+  const parsed = new Date(dateStr);
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+// Safely formats time to 12-hour AM/PM format
+function fmt(iso?: string) {
+  const d = parseSafeDate(iso);
+  if (!d) return "--:--";
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 function useCountdown(target: string | undefined, boardingNow: string) {
   const [left, setLeft] = useState("--:--");
+
   useEffect(() => {
     if (!target) return;
+
     const tick = () => {
-      const diff = new Date(target).getTime() - Date.now();
+      const targetDate = parseSafeDate(target);
+      if (!targetDate) return setLeft("--:--");
+
+      const diff = targetDate.getTime() - Date.now();
       if (diff <= 0) return setLeft(boardingNow);
+
       const h = Math.floor(diff / 3_600_000);
       const m = Math.floor((diff % 3_600_000) / 60_000);
       const s = Math.floor((diff % 60_000) / 1000);
       setLeft(h > 0 ? `${h}h ${m}m ${s}s` : `${m}m ${s}s`);
     };
+
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [target, boardingNow]);
+
   return left;
 }
 
@@ -62,7 +90,8 @@ export function StatusCard({ flight }: { flight: FlightInfo | null }) {
     );
   }
 
-  const onTime = flight.status === "On Time";
+  const onTime = flight.status === "On Time" || !flight.status;
+  const delayVal = flight.delayMinutes ?? 0;
 
   return (
     <motion.section
@@ -75,7 +104,6 @@ export function StatusCard({ flight }: { flight: FlightInfo | null }) {
       <div className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full bg-primary/30 blur-3xl" />
       <div className="relative flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          {/* Airline logo placeholder */}
           <span className="grid size-11 place-items-center rounded-2xl bg-primary-foreground/15 text-primary-foreground">
             <Plane className="size-5" />
           </span>
@@ -83,7 +111,7 @@ export function StatusCard({ flight }: { flight: FlightInfo | null }) {
             <p className="text-xl font-semibold tracking-tight text-primary-foreground">
               {flight.flightNumber}
             </p>
-            <p className="text-xs text-primary-foreground/70">{flight.airline}</p>
+            <p className="text-xs text-primary-foreground/70">{flight.airline || "Airline"}</p>
           </div>
         </div>
         <span
@@ -91,14 +119,16 @@ export function StatusCard({ flight }: { flight: FlightInfo | null }) {
             onTime ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
           }`}
         >
-          {onTime ? t("on_time") : `${t("delayed")} ${flight.delayMinutes}m`}
+          {onTime ? t("on_time") : `${t("delayed")}${delayVal > 0 ? ` ${delayVal}m` : ""}`}
         </span>
       </div>
 
       <div className="relative mt-6 flex items-center gap-4">
         <div>
-          <p className="text-2xl font-semibold text-primary-foreground">{flight.from.split(" ")[0]}</p>
-          <p className="text-[11px] text-primary-foreground/60">{flight.from}</p>
+          <p className="text-2xl font-semibold text-primary-foreground">
+            {flight.from ? flight.from.split("·")[0].split(" ")[0] : "—"}
+          </p>
+          <p className="text-[11px] text-primary-foreground/60">{flight.from || "—"}</p>
         </div>
         <div className="relative flex-1">
           <div className="h-px w-full bg-primary-foreground/25" />
@@ -112,14 +142,16 @@ export function StatusCard({ flight }: { flight: FlightInfo | null }) {
           </motion.span>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-semibold text-primary-foreground">{flight.to.split(" ")[0]}</p>
-          <p className="text-[11px] text-primary-foreground/60">{flight.to}</p>
+          <p className="text-2xl font-semibold text-primary-foreground">
+            {flight.to ? flight.to.split("·")[0].split(" ")[0] : "—"}
+          </p>
+          <p className="text-[11px] text-primary-foreground/60">{flight.to || "—"}</p>
         </div>
       </div>
 
       <div className="relative mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Metric icon={DoorOpen} label={t("gate")} value={flight.gate} />
-        <Metric icon={LandPlot} label={t("terminal")} value={flight.terminal} />
+        <Metric icon={DoorOpen} label={t("gate")} value={flight.gate || "—"} />
+        <Metric icon={LandPlot} label={t("terminal")} value={flight.terminal || "—"} />
         <Metric icon={Luggage} label={t("boarding")} value={fmt(flight.boardingTime)} />
         <Metric icon={Clock} label={t("departs")} value={fmt(flight.departureTime)} />
       </div>
