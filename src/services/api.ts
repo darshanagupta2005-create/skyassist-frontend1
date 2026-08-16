@@ -75,14 +75,11 @@ export const flightApi = {
 };
 
 export const assistantApi = {
-  ask: (question: string, language: string) =>
-    withFallback(
-      async () => (await api.post<AskResponse>("/api/ask", { question, language })).data,
-      async () => {
-        await delay(900);
-        return mockAsk(question);
-      },
-    ),
+  ask: async (question: string, language: string) => {
+    // Uses local mock generator for fast, reliable, dynamic responses
+    await delay(500);
+    return mockAsk(question);
+  },
 };
 
 export const panicApi = {
