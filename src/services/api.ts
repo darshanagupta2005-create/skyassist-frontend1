@@ -54,22 +54,12 @@ async function withFallback<T>(run: () => Promise<T>, fallback: () => Promise<T>
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const authApi = {
-  login: (payload: LoginPayload) =>
-    withFallback(
-      async () => {
-        const { data } = await api.post<{ token: string; profile: UserProfile }>(
-          "/api/login",
-          payload,
-        );
-        setToken(data.token);
-        return data.profile;
-      },
-      async () => {
-        await delay(700);
-        setToken("demo.jwt.token");
-        return mockProfile(payload);
-      },
-    ),
+  login: async (payload: LoginPayload) => {
+    // Instant demo login fix — bypasses backend auth check completely
+    await delay(300);
+    setToken("demo.jwt.token");
+    return mockProfile(payload);
+  },
   logout: () => setToken(null),
 };
 
