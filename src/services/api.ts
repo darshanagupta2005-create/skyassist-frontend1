@@ -62,7 +62,6 @@ export const authApi = {
   },
   logout: () => setToken(null),
 };
-
 export const flightApi = {
   get: (flightNumber: string) =>
     withFallback(
@@ -73,7 +72,6 @@ export const flightApi = {
       },
     ),
 };
-
 export const assistantApi = {
   ask: async (question: string, language: string) => {
     // Uses local mock generator for fast, reliable, dynamic responses
