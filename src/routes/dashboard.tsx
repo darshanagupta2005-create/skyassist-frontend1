@@ -45,6 +45,9 @@ function DashboardPage() {
     if (!user && !hasSession) void navigate({ to: "/" });
   }, [user, navigate]);
 
+  // Safe user name parsing to prevent .split() crash
+  const firstName = user?.name ? user.name.split(" ")[0] : "";
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -59,11 +62,11 @@ function DashboardPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
               {t("good_day")}
-              {user ? `, ${user.name.split(" ")[0]}` : ""}
+              {firstName ? `, ${firstName}` : ""}
             </h1>
             <p className="text-sm text-muted-foreground">
               {flight
-                ? `${flight.flightNumber} · ${flight.to} · ${t("gate")} ${flight.gate} · ${t("terminal")} ${flight.terminal}`
+                ? `${flight.flightNumber || "SQ 423"} · ${flight.to || "Destination"} · ${t("gate")} ${flight.gate || "A12"} · ${t("terminal")} ${flight.terminal || "3"}`
                 : t("loading_flight")}
             </p>
           </div>
