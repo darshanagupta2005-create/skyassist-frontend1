@@ -19,7 +19,7 @@ const BASE_URL =
 
 export const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000, // Increased to 15s to account for Render spin-up times
+  timeout: 15000, // 15s timeout for Render free-tier cold starts
   headers: { "Content-Type": "application/json" },
 });
 
@@ -41,12 +41,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-/** Runs the request, falling back to mock data if the backend is absent. */
+/** Runs the request, seamlessly falling back to mock data if the backend returns any error */
 async function withFallback<T>(run: () => Promise<T>, fallback: () => Promise<T> | T): Promise<T> {
   try {
     return await run();
   } catch (err) {
-    console.warn("Backend request failed, using fallback mock data:", err);
+    console.warn("Backend request failed or route missing. Falling back to mock data:", err);
     return await fallback();
   }
 }
@@ -58,7 +58,7 @@ export const authApi = {
     withFallback(
       async () => {
         const { data } = await api.post<{ token: string; profile: UserProfile }>(
-          "/login",
+          "/api/login",
           payload,
         );
         setToken(data.token);
@@ -76,7 +76,7 @@ export const authApi = {
 export const flightApi = {
   get: (flightNumber: string) =>
     withFallback(
-      async () => (await api.get<FlightInfo>("/flight", { params: { flightNumber } })).data,
+      async () => (await api.get<FlightInfo>("/api/flight", { params: { flightNumber } })).data,
       async () => {
         await delay(400);
         return mockFlight(flightNumber);
@@ -87,7 +87,7 @@ export const flightApi = {
 export const assistantApi = {
   ask: (question: string, language: string) =>
     withFallback(
-      async () => (await api.post<AskResponse>("/ask", { question, language })).data,
+      async () => (await api.post<AskResponse>("/api/ask", { question, language })).data,
       async () => {
         await delay(900);
         return mockAsk(question);
@@ -98,7 +98,7 @@ export const assistantApi = {
 export const panicApi = {
   report: (payload: PanicPayload) =>
     withFallback(
-      async () => (await api.post<{ ticketId: string }>("/panic", payload)).data,
+      async () => (await api.post<{ ticketId: string }>("/api/panic", payload)).data,
       async () => {
         await delay(600);
         return { ticketId: `SOS-${Math.floor(1000 + Math.random() * 8999)}` };
