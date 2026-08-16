@@ -5,21 +5,55 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { FlightInfo } from "@/lib/types";
 import { useUser } from "@/context/UserContext";
 
-// Safely parses ISO dates OR raw time strings like "19:35" / "19:35:00"
+// Safely parses ISO dates OR raw time strings like "19:35" / "19:35:00" / "05:10 AM"
 function parseSafeDate(dateStr?: string): Date | null {
   if (!dateStr) return null;
 
-  // Handles raw time strings like "19:35" or "19:35:00"
+  // Handles raw 24-hour time strings like "19:35" or "19:35:00"
   if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(dateStr)) {
-    const [h, m] = dateStr.split(":").map(Number);
+    const parts = dateStr.split(":");
+    const hStr = parts[0];
+    const mStr = parts[1];
+    if (hStr && mStr) {
+      const h = parseInt(hStr, 10);
+      const m = parseInt(mStr, 10);
+      if (!isNaN(h) && !isNaN(m)) {
+        const d = new Date();
+        d.setHours(h, m, 0, 0);
+        return d;
+      }
+    }
+  }
+
+  // Handles 12-hour formatted strings like "05:10 AM" or "05:10 PM"
+  const ampmMatch = dateStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (ampmMatch && ampmMatch[1] && ampmMatch[2] && ampmMatch[3]) {
+    let hours = parseInt(ampmMatch[1], 10);
+    const minutes = parseInt(ampmMatch[2], 10);
+    const period = ampmMatch[3].toUpperCase();
+
+    if (period === "PM" && hours < 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+
     const d = new Date();
-    d.setHours(h, m, 0, 0);
+    d.setHours(hours, minutes, 0, 0);
     return d;
   }
 
   // Handles standard ISO date strings
   const parsed = new Date(dateStr);
   return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+// Derives boarding time (45 mins before departure) if missing from API payload
+function getEffectiveBoardingTime(flight: FlightInfo): string | undefined {
+  if (flight.boardingTime) return flight.boardingTime;
+
+  const depDate = parseSafeDate(flight.departureTime);
+  if (!depDate) return undefined;
+
+  const boardingDate = new Date(depDate.getTime() - 45 * 60 * 1000);
+  return boardingDate.toISOString();
 }
 
 // Safely formats time to 12-hour AM/PM format
@@ -78,7 +112,9 @@ function Metric({
 
 export function StatusCard({ flight }: { flight: FlightInfo | null }) {
   const { t } = useUser();
-  const countdown = useCountdown(flight?.boardingTime, t("boarding_now"));
+
+  const effectiveBoardingTime = flight ? getEffectiveBoardingTime(flight) : undefined;
+  const countdown = useCountdown(effectiveBoardingTime, t("boarding_now"));
 
   if (!flight) {
     return (
@@ -126,7 +162,7 @@ export function StatusCard({ flight }: { flight: FlightInfo | null }) {
       <div className="relative mt-6 flex items-center gap-4">
         <div>
           <p className="text-2xl font-semibold text-primary-foreground">
-            {flight.from ? flight.from.split("·")[0].split(" ")[0] : "—"}
+            {flight.from ? flight.from.split("·")[0]?.split(" ")[0] : "—"}
           </p>
           <p className="text-[11px] text-primary-foreground/60">{flight.from || "—"}</p>
         </div>
@@ -143,7 +179,7 @@ export function StatusCard({ flight }: { flight: FlightInfo | null }) {
         </div>
         <div className="text-right">
           <p className="text-2xl font-semibold text-primary-foreground">
-            {flight.to ? flight.to.split("·")[0].split(" ")[0] : "—"}
+            {flight.to ? flight.to.split("·")[0]?.split(" ")[0] : "—"}
           </p>
           <p className="text-[11px] text-primary-foreground/60">{flight.to || "—"}</p>
         </div>
@@ -152,7 +188,7 @@ export function StatusCard({ flight }: { flight: FlightInfo | null }) {
       <div className="relative mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Metric icon={DoorOpen} label={t("gate")} value={flight.gate || "—"} />
         <Metric icon={LandPlot} label={t("terminal")} value={flight.terminal || "—"} />
-        <Metric icon={Luggage} label={t("boarding")} value={fmt(flight.boardingTime)} />
+        <Metric icon={Luggage} label={t("boarding")} value={fmt(effectiveBoardingTime)} />
         <Metric icon={Clock} label={t("departs")} value={fmt(flight.departureTime)} />
       </div>
 
